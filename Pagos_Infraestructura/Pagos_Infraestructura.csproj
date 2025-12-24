@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pagos_Aplicacion\Pagos_Aplicacion.csproj" />
+    <ProjectReference Include="..\Pagos_Dominio\Pagos_Dominio.csproj" />
+  </ItemGroup>
+
+</Project>
