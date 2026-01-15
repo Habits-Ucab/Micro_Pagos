@@ -27,4 +27,12 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="API\Controlador\" />
+    <Folder Include="Aplicacion\Handlers\Commands\" />
+    <Folder Include="Aplicacion\Handlers\Queries\" />
+    <Folder Include="Infraestructura\Repositorios\" />
+    <Folder Include="Infraestructura\Servicios\" />
+  </ItemGroup>
+
 </Project>
