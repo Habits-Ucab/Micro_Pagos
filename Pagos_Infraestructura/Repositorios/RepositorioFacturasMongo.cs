@@ -7,20 +7,43 @@ namespace Pagos_Infraestructura.Repositorios;
 
 public class RepositorioFacturasMongo : IRepositorioFacturas
 {
-    private readonly MongoContexto _contexto;
+    private readonly IMongoCollection<FacturaDigital> _coleccion;
 
     public RepositorioFacturasMongo(MongoContexto contexto)
     {
-        _contexto = contexto;
+        _coleccion = contexto.Facturas;
+    }
+
+    /// <summary>
+    /// Constructor alternativo para pruebas, permite inyectar colección simulada.
+    /// </summary>
+    public RepositorioFacturasMongo(IMongoCollection<FacturaDigital> coleccion)
+    {
+        _coleccion = coleccion;
     }
 
     public Task CrearAsync(FacturaDigital factura, CancellationToken ct)
     {
-        return _contexto.Facturas.InsertOneAsync(factura, cancellationToken: ct);
+        return _coleccion.InsertOneAsync(factura, cancellationToken: ct);
     }
 
     public async Task<FacturaDigital?> ObtenerPorIdPagoAsync(string idPago, CancellationToken ct)
     {
-        return await _contexto.Facturas.Find(x => x.IdPago == idPago).FirstOrDefaultAsync(ct);
+        var filter = Builders<FacturaDigital>.Filter.Eq(x => x.IdPago, idPago);
+        using var cursor = await Buscar(filter).ToCursorAsync(ct);
+
+        while (await cursor.MoveNextAsync(ct))
+        {
+            var doc = cursor.Current.FirstOrDefault();
+            return doc;
+        }
+
+        return null;
     }
+
+    /// <summary>
+    /// Método virtual para encapsular búsquedas y facilitar pruebas.
+    /// </summary>
+    protected virtual IFindFluent<FacturaDigital, FacturaDigital> Buscar(FilterDefinition<FacturaDigital> filter)
+        => _coleccion.Find(filter);
 }
