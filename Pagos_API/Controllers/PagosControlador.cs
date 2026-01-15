@@ -33,6 +33,20 @@ public class PagosControlador : ControllerBase
     }
 
     /// <summary>
+    /// Lista los pagos de un usuario (ordenados del más reciente al más antiguo).
+    /// </summary>
+    [HttpGet("por-usuario/{idUsuario}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ObtenerPorUsuario(
+        [FromRoute] string idUsuario,
+        [FromQuery] int limit = 50,
+        CancellationToken ct = default)
+    {
+        var pagos = await _mediator.Send(new ObtenerPagosPorUsuarioQuery(idUsuario, limit), ct);
+        return Ok(pagos);
+    }
+
+    /// <summary>
     /// Sincroniza el estado del pago contra Stripe y, si ya está confirmado,
     /// genera factura y publica eventos.
     /// </summary>

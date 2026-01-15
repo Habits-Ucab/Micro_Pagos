@@ -47,6 +47,25 @@ public class RepositorioPagosMongo : IRepositorioPagos
         return null;
     }
 
+    public async Task<IReadOnlyList<Pago>> ObtenerPorUsuarioAsync(string idUsuario, int limit, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(idUsuario)) return Array.Empty<Pago>();
+
+        var filter = Builders<Pago>.Filter.Eq(x => x.IdUsuario, idUsuario);
+        using var cursor = await Buscar(filter)
+            .Sort(Builders<Pago>.Sort.Descending(x => x.FechaCreacionUtc))
+            .Limit(limit)
+            .ToCursorAsync(ct);
+
+        var docs = new List<Pago>();
+        while (await cursor.MoveNextAsync(ct))
+        {
+            docs.AddRange(cursor.Current);
+        }
+
+        return docs;
+    }
+
     public async Task<IReadOnlyList<Pago>> ObtenerPendientesParaConciliacionAsync(DateTimeOffset maxFechaCreacionUtc, int maxRegistros, CancellationToken ct)
     {
         var filter = Builders<Pago>.Filter.And(
