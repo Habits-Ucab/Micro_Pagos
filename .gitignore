@@ -1,0 +1,135 @@
+############################
+# Dotnet / Build Artifacts #
+############################
+bin/
+obj/
+out/
+artifacts/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.log
+
+##############
+# User Files #
+##############
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+#####################
+# VS / VSCode Files #
+#####################
+.vs/
+.vscode/
+*.code-workspace
+
+##############
+# NuGet      #
+##############
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+project.lock.json
+project.fragment.lock.json
+
+####################
+# Rider / JetBrains
+####################
+.idea/
+*.iml
+*.ipr
+*.iws
+
+###################
+# OS Generated    #
+###################
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+#######################
+# Logs / Temp Files   #
+#######################
+logs/
+*.log
+*.tlog
+*.tmp
+*.temp
+
+#######################
+# Configuration Files #
+#######################
+# ❌ No ignoramos appsettings ni launchSettings ❌
+# Solo ignoramos secretos o env locales
+*.secrets.json
+*.env
+*.local.json
+appsettings.*.local.json
+
+########################
+# Entity Framework Core
+########################
+migrations/obj/
+*.db
+*.mdf
+*.ldf
+
+###############################
+# Test Results / Coverage     #
+###############################
+TestResults/
+coverage/
+coverage*.json
+coverage*.xml
+coverage*.info
+*.coverage
+*.coveragexml
+
+###############################
+# Resharper / Linting Tools   #
+###############################
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+##################################
+# Docker / Containers            #
+##################################
+docker-data/
+*.pid
+
+##################################
+# Cloudinary (si generas temp)   #
+##################################
+cloudinary_temp/
+
+##################################
+# Pub / Dist (Blazor o Web API) #
+##################################
+wwwroot/dist/
+wwwroot/build/
+dist/
+build/
+
+#####################
+# Node (si usas React)
+#####################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+package-lock.json

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pagos_API\Pagos_API.csproj" />
+    <ProjectReference Include="..\Pagos_Aplicacion\Pagos_Aplicacion.csproj" />
+    <ProjectReference Include="..\Pagos_Dominio\Pagos_Dominio.csproj" />
+    <ProjectReference Include="..\Pagos_Infraestructura\Pagos_Infraestructura.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="API\Controlador\" />
+    <Folder Include="Aplicacion\Handlers\Commands\" />
+    <Folder Include="Aplicacion\Handlers\Queries\" />
+    <Folder Include="Infraestructura\Repositorios\" />
+    <Folder Include="Infraestructura\Servicios\" />
+  </ItemGroup>
+
+</Project>
