@@ -6,6 +6,7 @@ using Pagos_Dominio.Entidades;
 using Pagos_Dominio.Enums;
 using Pagos_Dominio.Excepciones;
 using System.Linq;
+using Stripe;
 
 namespace Pagos_Aplicacion.Handlers.Commands;
 
@@ -94,13 +95,47 @@ public class CrearPagoHandler : IRequestHandler<CrearPagoCommand, ResultadoPagoD
 
         var montoEnCentavos = ConvertirAMenorUnidad(pago.MontoFinal);
 
-        var intento = await _servicioStripe.CrearYConfirmarPagoAsync(
-            idStripeCustomer,
-            request.IdMetodoPagoStripe,
-            montoEnCentavos,
-            pago.Moneda,
-            pago.Id,
-            cancellationToken);
+        ResultadoIntentoPagoStripeDto intento;
+        try
+        {
+            intento = await _servicioStripe.CrearYConfirmarPagoAsync(
+                idStripeCustomer,
+                request.IdMetodoPagoStripe,
+                montoEnCentavos,
+                pago.Moneda,
+                pago.Id,
+                cancellationToken);
+        }
+        catch (StripeException ex) when (EsClienteInexistente(ex))
+        {
+            // Customer inválido en Stripe: recreamos y reintentamos.
+            var datosMetodo = await _servicioStripe.AgregarMetodoPagoAsync(
+                null,
+                request.EmailUsuario,
+                request.IdMetodoPagoStripe,
+                cancellationToken);
+
+            idStripeCustomer = datosMetodo.IdStripeCustomer;
+
+            var metodoGuardado = new MetodoPagoGuardado(
+                request.IdUsuario,
+                datosMetodo.IdStripeCustomer,
+                datosMetodo.IdStripePaymentMethod,
+                datosMetodo.Marca,
+                datosMetodo.Ultimos4,
+                datosMetodo.MesExp,
+                datosMetodo.AnioExp);
+
+            await _repositorioMetodosPago.CrearAsync(metodoGuardado, cancellationToken);
+
+            intento = await _servicioStripe.CrearYConfirmarPagoAsync(
+                idStripeCustomer,
+                request.IdMetodoPagoStripe,
+                montoEnCentavos,
+                pago.Moneda,
+                pago.Id,
+                cancellationToken);
+        }
 
         pago.AsociarStripePaymentIntent(intento.IdPaymentIntent);
 
@@ -142,5 +177,18 @@ public class CrearPagoHandler : IRequestHandler<CrearPagoCommand, ResultadoPagoD
     {
         // Nota: esto asume monedas con 2 decimales (USD, EUR, etc.).
         return (long)Math.Round(monto * 100m, 0, MidpointRounding.AwayFromZero);
+    }
+
+    private static bool EsClienteInexistente(StripeException ex)
+    {
+        var code = ex.StripeError?.Code ?? string.Empty;
+        var param = ex.StripeError?.Param ?? string.Empty;
+        var msg = ex.Message ?? string.Empty;
+
+        if (string.Equals(code, "resource_missing", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(param, "customer", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return msg.Contains("No such customer", StringComparison.OrdinalIgnoreCase);
     }
 }

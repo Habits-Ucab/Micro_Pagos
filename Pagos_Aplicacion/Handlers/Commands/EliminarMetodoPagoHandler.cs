@@ -1,6 +1,7 @@
 using MediatR;
 using Pagos_Aplicacion.Commands;
 using Pagos_Aplicacion.Interfaces;
+using Stripe;
 
 namespace Pagos_Aplicacion.Handlers.Commands;
 
@@ -31,8 +32,15 @@ public class EliminarMetodoPagoHandler : IRequestHandler<EliminarMetodoPagoComma
         if (metodo is null)
             return false;
 
-        // Desasociar en Stripe (si falla aquí, preferimos no borrar en Mongo).
-        await _servicioStripe.DesasociarMetodoPagoAsync(idPaymentMethod, cancellationToken);
+        // Desasociar en Stripe. Si el customer o payment method no existe, limpiamos Mongo igual.
+        try
+        {
+            await _servicioStripe.DesasociarMetodoPagoAsync(idPaymentMethod, cancellationToken);
+        }
+        catch (StripeException ex) when (EsRecursoInexistente(ex))
+        {
+            // Ignorar: el método ya no existe en Stripe.
+        }
 
         var eliminado = await _repositorioMetodosPago.EliminarPorUsuarioYPaymentMethodAsync(idUsuario, idPaymentMethod, cancellationToken);
 
@@ -44,12 +52,30 @@ public class EliminarMetodoPagoHandler : IRequestHandler<EliminarMetodoPagoComma
                 .OrderByDescending(x => x.FechaRegistroUtc)
                 .FirstOrDefault();
 
-            await _servicioStripe.EstablecerMetodoPagoPorDefectoAsync(
-                metodo.IdStripeCustomer,
-                nuevoDefault?.IdStripePaymentMethod,
-                cancellationToken);
+            try
+            {
+                await _servicioStripe.EstablecerMetodoPagoPorDefectoAsync(
+                    metodo.IdStripeCustomer,
+                    nuevoDefault?.IdStripePaymentMethod,
+                    cancellationToken);
+            }
+            catch (StripeException ex) when (EsRecursoInexistente(ex))
+            {
+                // Ignorar: el customer ya no existe en Stripe.
+            }
         }
 
         return eliminado;
+    }
+
+    private static bool EsRecursoInexistente(StripeException ex)
+    {
+        var code = ex.StripeError?.Code ?? string.Empty;
+        if (string.Equals(code, "resource_missing", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        var msg = ex.Message ?? string.Empty;
+        return msg.Contains("No such customer", StringComparison.OrdinalIgnoreCase)
+               || msg.Contains("No such payment_method", StringComparison.OrdinalIgnoreCase);
     }
 }
